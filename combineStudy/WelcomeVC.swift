@@ -43,7 +43,7 @@ class WelcomeViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .black
+        view.backgroundColor = .white
         
        // presentNicknameViewController()
         configureLabel()
@@ -58,11 +58,12 @@ class WelcomeViewController: UIViewController {
     func configureLabel() {
         if let nickname = nickname {
             welcomeLabel.text = "\(nickname)님\n 반가워요!"
-            
+            print(nickname)
         } else {
             welcomeLabel.text = "\(id)님\n 반가워요!"
         }
     }
+
     
     func addSubViews() {
         let views = [imageView, welcomeLabel, backButton]
@@ -88,14 +89,10 @@ class WelcomeViewController: UIViewController {
         }
     }
     
-        @objc func backToMain() {
-            let mainVC = LoginViewController()
-        
-            if let navigationController = self.navigationController {
-                navigationController.pushViewController(mainVC, animated: true)
-        
-        }
+    @objc func backToMain() {
+        self.dismiss(animated: true, completion: nil)
     }
+
     
 }
 //

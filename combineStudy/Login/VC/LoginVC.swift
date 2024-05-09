@@ -8,11 +8,16 @@
 import UIKit
 
 import SnapKit
-import Then
 import Combine
+import CombineCocoa
+
 
 
 class LoginViewController: UIViewController, UITextFieldDelegate, WelcomeViewControllerDelegate {
+
+    var viewModel = LoginViewModel()
+    var cancellables = Set<AnyCancellable>()
+    
     
     func didLoginWithId(id: String) {
         print(1)
@@ -76,11 +81,9 @@ class LoginViewController: UIViewController, UITextFieldDelegate, WelcomeViewCon
         $0.setAttributedTitle(attributedTitle, for: .normal)
     }
     
-    
     let spaceView = UIView().then {
         $0.backgroundColor = UIColor(named: "gray2")
     }
-    
     
     let eyeButton = UIButton(type: .custom)
     let xCircleButton = UIButton(type: .custom)
@@ -89,40 +92,94 @@ class LoginViewController: UIViewController, UITextFieldDelegate, WelcomeViewCon
     //MARK: - ViewDidLoad
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        configureUI()
+        setupBindings()
+        layoutUI()
+        bind()
+    }
+
+    private func configureUI() {
         view.backgroundColor = .black
         idTextFieldView.delegate = self
         passwordTextFieldView.delegate = self
-        
+
+        eyeButton.setImage(UIImage(named: "eyeIcon"), for: .normal)
+        xCircleButton.setImage(UIImage(named: "xCircle"), for: .normal)
+    }
+
+    private func setupBindings() {
+        idTextFieldView.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
+        passwordTextFieldView.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
+        eyeButton.addTarget(self, action: #selector(togglePasswordView), for: .touchUpInside)
+        xCircleButton.addTarget(self, action: #selector(handleXCircleButtonTap), for: .touchUpInside)
+        loginButton.addTarget(self, action: #selector(handleLogin), for: .touchUpInside)
+        makeAccount.addTarget(self, action: #selector(presentModalView), for: .touchUpInside)
+    }
+
+    private func layoutUI() {
         addSubViews()
         setConstraints()
-        
-        // 패스워드 텍스트 필드 설정
-        eyeButton.setImage(UIImage(named: "eyeIcon"), for: .normal)
-        eyeButton.addTarget(self, action: #selector(togglePasswordView), for: .touchUpInside)
+
         eyeButton.snp.makeConstraints { make in
             make.trailing.equalTo(passwordTextFieldView.snp.trailing).offset(-20)
             make.centerY.equalTo(passwordTextFieldView)
             make.width.height.equalTo(24)
         }
-        
-        xCircleButton.setImage(UIImage(named: "xCircle"), for: .normal)
         xCircleButton.snp.makeConstraints { make in
             make.trailing.equalTo(eyeButton.snp.leading).offset(-20)
             make.centerY.equalTo(passwordTextFieldView)
             make.width.height.equalTo(24)
         }
-        
-        idTextFieldView.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
-        passwordTextFieldView.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
-        xCircleButton.addTarget(self, action: #selector(handleXCircleButtonTap), for: .touchUpInside)
-        
-        loginButton.addTarget(self, action: #selector(handleLogin), for: .touchUpInside)
-        makeAccount.addTarget(self, action: #selector(presentModalView), for: .touchUpInside)
-        
-        
-        
     }
+
+    //MARK: - DataBind
+    
+    private func bind() {
+        let input = LoginViewModel.Input(
+            username: idTextFieldView.textPublisher
+                .compactMap { $0 ?? "" } // 옵셔널을 처리하여 비어있지 않은 문자열을 보장
+                .eraseToAnyPublisher(),
+            password: passwordTextFieldView.textPublisher
+                .compactMap { $0 ?? "" } // 동일하게 옵셔널 처리
+                .eraseToAnyPublisher()
+        )
+
+        let output = viewModel.transform(input: input, cancelBag: &cancellables)
+
+        output.isButtonEnabled
+            .receive(on: RunLoop.main)
+            .assign(to: \.isEnabled, on: loginButton)
+            .store(in: &cancellables)
+
+        output.buttonBackgroundColor
+            .receive(on: RunLoop.main)
+            .sink { [weak self] color in
+                self?.loginButton.backgroundColor = color
+            }
+            .store(in: &cancellables)
+    }
+
+    @objc func handleLogin() {
+        viewModel.username = idTextFieldView.text ?? ""
+        viewModel.password = passwordTextFieldView.text ?? ""
+        
+        print("Current username: \(viewModel.username)")
+        print("Current password: \(viewModel.password)")
+        
+        viewModel.login()
+        
+        // 로그인 성공 후 WelcomeViewController를 모달로 표시
+        let welcomeVC = WelcomeViewController()
+        welcomeVC.id = viewModel.username  // id로 username을 전달
+        welcomeVC.modalPresentationStyle = .fullScreen
+        self.present(welcomeVC, animated: true, completion: nil)
+    }
+
+    
+
+       @objc func handleXCircleButtonTap() {
+           viewModel.clearFields()
+       }
     
     //MARK: - AddSubview
     func addSubViews() {
@@ -266,22 +323,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate, WelcomeViewCon
         loginButton.backgroundColor = isBothFilled ? UIColor(named: "red"): .clear
     }
     
-    //지우기 버튼 눌럿을때 동작
-    @objc func handleXCircleButtonTap() {
-        idTextFieldView.text = ""
-        passwordTextFieldView.text = ""
-    }
     
-    //로그인 화면 전환
-    @objc func handleLogin() {
-        let welcomeVC = WelcomeViewController()
-        welcomeVC.delegate = self
-        welcomeVC.id = idTextFieldView.text ?? ""
-        welcomeVC.nickname = self.nickname
-        welcomeVC.modalPresentationStyle = .fullScreen
-        
-        present(welcomeVC, animated: true, completion: nil)
-    }
     
     //닉네임 만들기
     @objc func presentModalView() {
@@ -301,6 +343,16 @@ class LoginViewController: UIViewController, UITextFieldDelegate, WelcomeViewCon
     }
     
 }
+
+extension UITextField {
+    var textPublisher: AnyPublisher<String?, Never> {
+        NotificationCenter.default.publisher(for: UITextField.textDidChangeNotification, object: self)
+            .map { $0.object as? UITextField }
+            .map { $0?.text }
+            .eraseToAnyPublisher()
+    }
+}
+
 //#Preview{
 //    LoginViewController()
 //}
