@@ -10,6 +10,7 @@
 		7852BD042BEB3B480037BA7E /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7852BD032BEB3B480037BA7E /* SnapKit */; };
 		7852BD072BEB3B560037BA7E /* Then in Frameworks */ = {isa = PBXBuildFile; productRef = 7852BD062BEB3B560037BA7E /* Then */; };
 		7852BD092BEB3B910037BA7E /* WelcomeVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7852BD082BEB3B910037BA7E /* WelcomeVC.swift */; };
+		7852BD2C2BEC8B1F0037BA7E /* CombineCocoa in Frameworks */ = {isa = PBXBuildFile; productRef = 7852BD2B2BEC8B1F0037BA7E /* CombineCocoa */; };
 		78F327D92BE46261001EAC45 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78F327D82BE46261001EAC45 /* AppDelegate.swift */; };
 		78F327DB2BE46261001EAC45 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78F327DA2BE46261001EAC45 /* SceneDelegate.swift */; };
 		78F327DD2BE46261001EAC45 /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78F327DC2BE46261001EAC45 /* LoginViewController.swift */; };
@@ -36,6 +37,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7852BD042BEB3B480037BA7E /* SnapKit in Frameworks */,
+				7852BD2C2BEC8B1F0037BA7E /* CombineCocoa in Frameworks */,
 				7852BD072BEB3B560037BA7E /* Then in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -93,6 +95,7 @@
 			packageProductDependencies = (
 				7852BD032BEB3B480037BA7E /* SnapKit */,
 				7852BD062BEB3B560037BA7E /* Then */,
+				7852BD2B2BEC8B1F0037BA7E /* CombineCocoa */,
 			);
 			productName = combineStudy;
 			productReference = 78F327D52BE46261001EAC45 /* combineStudy.app */;
@@ -125,6 +128,7 @@
 			packageReferences = (
 				7852BD022BEB3B480037BA7E /* XCRemoteSwiftPackageReference "SnapKit" */,
 				7852BD052BEB3B560037BA7E /* XCRemoteSwiftPackageReference "Then" */,
+				7852BD2A2BEC8B1F0037BA7E /* XCRemoteSwiftPackageReference "CombineCocoa" */,
 			);
 			productRefGroup = 78F327D62BE46261001EAC45 /* Products */;
 			projectDirPath = "";
@@ -389,6 +393,14 @@
 				minimumVersion = 3.0.0;
 			};
 		};
+		7852BD2A2BEC8B1F0037BA7E /* XCRemoteSwiftPackageReference "CombineCocoa" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/CombineCommunity/CombineCocoa.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.4.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -401,6 +413,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7852BD052BEB3B560037BA7E /* XCRemoteSwiftPackageReference "Then" */;
 			productName = Then;
+		};
+		7852BD2B2BEC8B1F0037BA7E /* CombineCocoa */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7852BD2A2BEC8B1F0037BA7E /* XCRemoteSwiftPackageReference "CombineCocoa" */;
+			productName = CombineCocoa;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
