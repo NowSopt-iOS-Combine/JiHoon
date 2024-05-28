@@ -4,14 +4,10 @@
 //
 //  Created by 이지훈 on 5/3/24.
 //
-
 import UIKit
-
 import SnapKit
 import Combine
 import CombineCocoa
-
-
 
 class LoginViewController: UIViewController, UITextFieldDelegate, WelcomeViewControllerDelegate {
 
@@ -175,11 +171,9 @@ class LoginViewController: UIViewController, UITextFieldDelegate, WelcomeViewCon
         self.present(welcomeVC, animated: true, completion: nil)
     }
 
-    
-
-       @objc func handleXCircleButtonTap() {
-           viewModel.clearFields()
-       }
+    @objc func handleXCircleButtonTap() {
+        viewModel.clearFields()
+    }
     
     //MARK: - AddSubview
     func addSubViews() {
@@ -214,12 +208,10 @@ class LoginViewController: UIViewController, UITextFieldDelegate, WelcomeViewCon
             make.centerX.equalTo(view)
             make.width.equalTo(335)
             make.height.equalTo(52)
-            
         }
         
         passwordTextFieldView.snp.makeConstraints { make in
             make.top.equalTo(idTextFieldView.snp.bottom).offset(20)
-            
             make.centerX.equalTo(view)
             make.width.equalTo(335)
             make.height.equalTo(52)
@@ -227,7 +219,6 @@ class LoginViewController: UIViewController, UITextFieldDelegate, WelcomeViewCon
         
         loginButton.snp.makeConstraints { make in
             make.top.equalTo(passwordTextFieldView.snp.bottom).offset(21)
-            
             make.centerX.equalTo(view)
             make.width.equalTo(335)
             make.height.equalTo(52)
@@ -268,28 +259,6 @@ class LoginViewController: UIViewController, UITextFieldDelegate, WelcomeViewCon
         let spacerViewForPassword = UIView(frame:CGRect(x:0, y:0, width:22, height:10))
         passwordTextFieldView.leftViewMode = .always
         passwordTextFieldView.leftView = spacerViewForPassword
-        
-        findId.snp.makeConstraints { make in
-            make.top.equalTo(loginButton.snp.bottom).offset(31)
-            
-        }
-        
-        //오른쪽 버튼 공간 띄우기
-        eyeButton.setImage(UIImage(named: "eyeIcon"), for: .normal)
-        eyeButton.addTarget(self, action: #selector(togglePasswordView), for: .touchUpInside)
-        eyeButton.snp.makeConstraints { make in
-            make.trailing.equalTo(passwordTextFieldView.snp.trailing).offset(-20)
-            make.centerY.equalTo(passwordTextFieldView)
-            make.width.height.equalTo(24)
-        }
-        
-        xCircleButton.setImage(UIImage(named: "xcircle"), for: .normal)
-        xCircleButton.snp.makeConstraints { make in
-            make.trailing.equalTo(eyeButton.snp.leading).offset(-20)
-            make.centerY.equalTo(passwordTextFieldView)
-            make.width.height.equalTo(24)
-        }
-        
     }
     
     // TF 포커스 호출
@@ -320,28 +289,24 @@ class LoginViewController: UIViewController, UITextFieldDelegate, WelcomeViewCon
     @objc func textFieldDidChange(_ textField: UITextField) {
         let isBothFilled = !(idTextFieldView.text?.isEmpty ?? true) && !(passwordTextFieldView.text?.isEmpty ?? true)
         loginButton.isEnabled = isBothFilled
-        loginButton.backgroundColor = isBothFilled ? UIColor(named: "red"): .clear
+        loginButton.backgroundColor = isBothFilled ? UIColor(named: "red") : .clear
     }
-    
-    
     
     //닉네임 만들기
     @objc func presentModalView() {
-        //            let modalViewController = NicknameViewController()
-        //        
-        //        if let nicknameVC = modalViewController.presentationController as? UISheetPresentationController {
-        //            nicknameVC.detents = [.medium()]
-        //            nicknameVC.prefersGrabberVisible = true
-        //
-        //        }
-        //            modalViewController.onSaveNickname = { [weak self] nickname in
-        //                self?.nickname = nickname  // 닉네임 저장
-        //                print("닉네임 저장됨: \(nickname)")
-        //            }
-        //            present(modalViewController, animated: true, completion: nil)
-        //        }
+        let modalViewController = NicknameViewController()
+        modalViewController.onSaveNickname = { [weak self] nickname in
+            self?.nickname = nickname  // 닉네임 저장
+            print("닉네임 저장됨: \(nickname)")
+        }
+        modalViewController.modalPresentationStyle = .formSheet
+        if let sheet = modalViewController.sheetPresentationController {
+            sheet.detents = [.medium()]
+            sheet.prefersGrabberVisible = true
+        }
+        self.present(modalViewController, animated: true, completion: nil)
     }
-    
+
 }
 
 extension UITextField {
@@ -352,7 +317,3 @@ extension UITextField {
             .eraseToAnyPublisher()
     }
 }
-
-//#Preview{
-//    LoginViewController()
-//}
