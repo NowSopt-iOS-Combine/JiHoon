@@ -1,3 +1,4 @@
+//
 //  NicknameViewController.swift
 //  assignment
 //
@@ -5,7 +6,6 @@
 //
 
 import UIKit
-
 import SnapKit
 import Then
 
@@ -23,11 +23,11 @@ class NicknameViewController: UIViewController, UITextFieldDelegate {
     }
     
     let nicknameTextField = UITextField().then {
-        $0.backgroundColor = UIColor(named: "gray84")
+        $0.backgroundColor = UIColor(named: "gray84") ?? UIColor.lightGray
         $0.layer.cornerRadius = 3
         $0.font = UIFont(name: "Pretendard-SemiBold", size: 14)
-        $0.textColor = UIColor(named: "gray4")
-        $0.attributedPlaceholder = NSAttributedString(string: "닉네임", attributes: [NSAttributedString.Key.foregroundColor: UIColor(named: "gray2") as Any])
+        $0.textColor = UIColor(named: "gray4") ?? UIColor.darkGray
+        $0.attributedPlaceholder = NSAttributedString(string: "닉네임", attributes: [NSAttributedString.Key.foregroundColor: UIColor(named: "gray2") ?? UIColor.gray])
         
         let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 20, height: $0.frame.height))
         $0.leftView = paddingView
@@ -36,9 +36,10 @@ class NicknameViewController: UIViewController, UITextFieldDelegate {
     }
     
     let saveBtn = UIButton().then {
-        $0.backgroundColor = UIColor(named: "red")
+        $0.backgroundColor = UIColor(named: "red") ?? UIColor.red
         $0.setTitle("저장하기", for: .normal)
         $0.layer.cornerRadius = 3
+        $0.isEnabled = false
     }
     
     override func viewDidLoad() {
@@ -60,7 +61,9 @@ class NicknameViewController: UIViewController, UITextFieldDelegate {
         }
         
         viewModel.isValid.bind { [weak self] isValid in
-            self?.saveBtn.isEnabled = isValid
+            guard let self = self else { return }
+            self.saveBtn.isEnabled = isValid
+            self.saveBtn.backgroundColor = isValid ? (UIColor(named: "red") ?? UIColor.red) : (UIColor(named: "gray84") ?? UIColor.lightGray)
         }
         
         viewModel.errorMessage.bind { errorMessage in
@@ -85,8 +88,9 @@ class NicknameViewController: UIViewController, UITextFieldDelegate {
     // MARK: - Layouts
     func setConstraints() {
         nicknameLabel.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(50)
+            $0.top.equalTo(view.safeAreaLayoutGuide).offset(50)
             $0.leading.equalToSuperview().offset(20)
+            $0.trailing.equalToSuperview().offset(-20)
         }
         
         nicknameTextField.snp.makeConstraints {
@@ -97,7 +101,7 @@ class NicknameViewController: UIViewController, UITextFieldDelegate {
         }
         
         saveBtn.snp.makeConstraints {
-            $0.top.equalTo(nicknameTextField.snp.bottom).offset(200)
+            $0.top.equalTo(nicknameTextField.snp.bottom).offset(20)
             $0.leading.equalToSuperview().offset(20)
             $0.trailing.equalToSuperview().offset(-20)
             $0.height.equalTo(50)
@@ -125,13 +129,12 @@ class NicknameViewController: UIViewController, UITextFieldDelegate {
     }
     
     @objc func saveNickname() {
-        print("Save Button Pressed")  // 추가한 로그
         viewModel.saveNickname { [weak self] nickname in
             guard let nickname = nickname else {
                 return
             }
             self?.onSaveNickname?(nickname)
-            
         }
     }
 }
+

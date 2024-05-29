@@ -10,17 +10,16 @@ import Combine
 import CombineCocoa
 
 class LoginViewController: UIViewController, UITextFieldDelegate, WelcomeViewControllerDelegate {
-
+    
     var viewModel = LoginViewModel()
     var cancellables = Set<AnyCancellable>()
-    
     
     func didLoginWithId(id: String) {
         print(1)
     }
     
-    //MARK: - Properties
-    var nickname: String?  // 클로저로 받을 닉네임
+    // MARK: - Properties
+    @Published var nickname: String?  // 클로저로 받을 닉네임
     
     let loginLabel = UILabel().then {
         $0.text = "TVING ID 로그인"
@@ -84,8 +83,13 @@ class LoginViewController: UIViewController, UITextFieldDelegate, WelcomeViewCon
     let eyeButton = UIButton(type: .custom)
     let xCircleButton = UIButton(type: .custom)
     
+    let nicknameLabel = UILabel().then {
+        $0.textColor = UIColor(named: "gray2")
+        $0.font = UIFont(name: "Pretendard-SemiBold", size: 16)
+        $0.textAlignment = .center
+    }
     
-    //MARK: - ViewDidLoad
+    // MARK: - ViewDidLoad
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
@@ -104,8 +108,8 @@ class LoginViewController: UIViewController, UITextFieldDelegate, WelcomeViewCon
     }
 
     private func setupBindings() {
-        idTextFieldView.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
-        passwordTextFieldView.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
+        idTextFieldView.addTarget(self, action: #selector(textFieldDidChange(_:)), for: .editingChanged)
+        passwordTextFieldView.addTarget(self, action: #selector(textFieldDidChange(_:)), for: .editingChanged)
         eyeButton.addTarget(self, action: #selector(togglePasswordView), for: .touchUpInside)
         xCircleButton.addTarget(self, action: #selector(handleXCircleButtonTap), for: .touchUpInside)
         loginButton.addTarget(self, action: #selector(handleLogin), for: .touchUpInside)
@@ -128,15 +132,14 @@ class LoginViewController: UIViewController, UITextFieldDelegate, WelcomeViewCon
         }
     }
 
-    //MARK: - DataBind
-    
+    // MARK: - DataBind
     private func bind() {
         let input = LoginViewModel.Input(
             username: idTextFieldView.textPublisher
-                .compactMap { $0 ?? "" } // 옵셔널을 처리하여 비어있지 않은 문자열을 보장
+                .compactMap { $0 ?? "" }
                 .eraseToAnyPublisher(),
             password: passwordTextFieldView.textPublisher
-                .compactMap { $0 ?? "" } // 동일하게 옵셔널 처리
+                .compactMap { $0 ?? "" }
                 .eraseToAnyPublisher()
         )
 
@@ -151,6 +154,13 @@ class LoginViewController: UIViewController, UITextFieldDelegate, WelcomeViewCon
             .receive(on: RunLoop.main)
             .sink { [weak self] color in
                 self?.loginButton.backgroundColor = color
+            }
+            .store(in: &cancellables)
+        
+        $nickname
+            .receive(on: RunLoop.main)
+            .sink { [weak self] nickname in
+                self?.nicknameLabel.text = nickname
             }
             .store(in: &cancellables)
     }
@@ -175,7 +185,15 @@ class LoginViewController: UIViewController, UITextFieldDelegate, WelcomeViewCon
         viewModel.clearFields()
     }
     
-    //MARK: - AddSubview
+    @objc func textFieldDidChange(_ textField: UITextField) {
+        if textField == idTextFieldView {
+            viewModel.updateUsername(textField.text ?? "")
+        } else if textField == passwordTextFieldView {
+            viewModel.updatePassword(textField.text ?? "")
+        }
+    }
+    
+    // MARK: - AddSubview
     func addSubViews() {
         let views = [
             loginLabel,
@@ -188,15 +206,15 @@ class LoginViewController: UIViewController, UITextFieldDelegate, WelcomeViewCon
             makeAccount,
             spaceView,
             eyeButton,
-            xCircleButton
+            xCircleButton,
+            nicknameLabel
         ]
         views.forEach {
             view.addSubview($0)
         }
     }
     
-    
-    //MARK: - layout
+    // MARK: - layout
     func setConstraints() {
         loginLabel.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide).offset(90)
@@ -251,14 +269,19 @@ class LoginViewController: UIViewController, UITextFieldDelegate, WelcomeViewCon
             make.trailing.equalTo(view.snp.trailing).offset(-43)
         }
         
-        //PlaceHolder 왼쪽공간 띄우기
-        let spacerView = UIView(frame:CGRect(x:0, y:0, width:22, height:10))
+        // PlaceHolder 왼쪽공간 띄우기
+        let spacerView = UIView(frame: CGRect(x: 0, y: 0, width: 22, height: 10))
         idTextFieldView.leftViewMode = .always
         idTextFieldView.leftView = spacerView
         
-        let spacerViewForPassword = UIView(frame:CGRect(x:0, y:0, width:22, height:10))
+        let spacerViewForPassword = UIView(frame: CGRect(x: 0, y: 0, width: 22, height: 10))
         passwordTextFieldView.leftViewMode = .always
         passwordTextFieldView.leftView = spacerViewForPassword
+        
+        nicknameLabel.snp.makeConstraints { make in
+            make.top.equalTo(makeAccount.snp.bottom).offset(20)
+            make.centerX.equalTo(view)
+        }
     }
     
     // TF 포커스 호출
@@ -274,25 +297,12 @@ class LoginViewController: UIViewController, UITextFieldDelegate, WelcomeViewCon
         textField.layer.borderWidth = 0.0
     }
     
-    // 텍스트가 변경될 때 호출되는 메서드
-    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-        textField.clearButtonMode = .whileEditing
-        return true
-    }
-    
-    //비밀번호 보안처리
+    // 비밀번호 보안처리
     @objc func togglePasswordView() {
         passwordTextFieldView.isSecureTextEntry.toggle()
     }
     
-    //텍스트 필드 채워졌는지 확인
-    @objc func textFieldDidChange(_ textField: UITextField) {
-        let isBothFilled = !(idTextFieldView.text?.isEmpty ?? true) && !(passwordTextFieldView.text?.isEmpty ?? true)
-        loginButton.isEnabled = isBothFilled
-        loginButton.backgroundColor = isBothFilled ? UIColor(named: "red") : .clear
-    }
-    
-    //닉네임 만들기
+    // 닉네임 만들기
     @objc func presentModalView() {
         let modalViewController = NicknameViewController()
         modalViewController.onSaveNickname = { [weak self] nickname in
@@ -301,12 +311,14 @@ class LoginViewController: UIViewController, UITextFieldDelegate, WelcomeViewCon
         }
         modalViewController.modalPresentationStyle = .formSheet
         if let sheet = modalViewController.sheetPresentationController {
-            sheet.detents = [.medium()]
+            let smallDetent = UISheetPresentationController.Detent.custom { context in
+                return 200
+            }
+            sheet.detents = [smallDetent]
             sheet.prefersGrabberVisible = true
         }
         self.present(modalViewController, animated: true, completion: nil)
     }
-
 }
 
 extension UITextField {

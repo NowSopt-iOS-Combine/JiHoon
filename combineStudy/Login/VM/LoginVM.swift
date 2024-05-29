@@ -3,7 +3,7 @@
 //  combineStudy
 //
 //  Created by 이지훈 on 5/9/24.
-//
+
 import UIKit
 import Combine
 
@@ -56,4 +56,13 @@ class LoginViewModel {
         username = ""
         password = ""
     }
+
+    func updateUsername(_ username: String) {
+        self.username = username
+    }
+
+    func updatePassword(_ password: String) {
+        self.password = password
+    }
 }
+
