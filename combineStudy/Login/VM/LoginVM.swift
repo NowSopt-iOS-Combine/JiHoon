@@ -5,23 +5,22 @@
 //  Created by 이지훈 on 5/9/24.
 
 import UIKit
+
 import Combine
 
 class LoginViewModel {
     var cancellables = Set<AnyCancellable>()
 
-    @Published var username: String = ""
-    @Published var password: String = ""
-    @Published var isLoginButtonEnabled: Bool = false
-    @Published var loginButtonBackgroundColor: UIColor = .clear
+    @Published var nickname: String = ""
+    @Published var isSaveButtonEnabled: Bool = false
+    @Published var saveButtonBackgroundColor: UIColor = .clear
 
     init() {
         setupBindings()
     }
 
     struct Input {
-        var username: AnyPublisher<String, Never>
-        var password: AnyPublisher<String, Never>
+        var nickname: AnyPublisher<String, Never>
     }
 
     struct Output {
@@ -29,9 +28,9 @@ class LoginViewModel {
         var buttonBackgroundColor: AnyPublisher<UIColor, Never>
     }
 
-    func transform(input: Input, cancelBag: inout Set<AnyCancellable>) -> Output {
-        let isButtonEnabled = Publishers.CombineLatest(input.username, input.password)
-            .map { !$0.isEmpty && !$1.isEmpty }
+    func transform(input: Input) -> Output {
+        let isButtonEnabled = input.nickname
+            .map { !$0.isEmpty }
             .eraseToAnyPublisher()
 
         let buttonBackgroundColor = isButtonEnabled
@@ -42,27 +41,22 @@ class LoginViewModel {
     }
 
     private func setupBindings() {
-        Publishers.CombineLatest($username, $password)
-            .map { !$0.isEmpty && !$1.isEmpty }
-            .assign(to: \.isLoginButtonEnabled, on: self)
+        $nickname
+            .map { !$0.isEmpty }
+            .assign(to: \.isSaveButtonEnabled, on: self)
             .store(in: &cancellables)
     }
 
-    func login() {
-        print("Login attempted with username: \(username) and password: \(password)")
+    func saveNickname() {
+        print("Nickname saved: \(nickname)")
     }
 
     func clearFields() {
-        username = ""
-        password = ""
+        nickname = ""
     }
 
-    func updateUsername(_ username: String) {
-        self.username = username
-    }
-
-    func updatePassword(_ password: String) {
-        self.password = password
+    func updateNickname(_ nickname: String) {
+        self.nickname = nickname
     }
 }
 

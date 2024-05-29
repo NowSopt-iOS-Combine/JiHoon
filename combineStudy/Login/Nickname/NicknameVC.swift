@@ -4,17 +4,24 @@
 //
 //  Created by 이지훈 on 4/12/24.
 //
-
 import UIKit
 import SnapKit
 import Then
+import Combine
 
-class NicknameViewController: UIViewController, UITextFieldDelegate {
+class NicknameViewController: UIViewController {
+
+    private var viewModel: NicknameViewModel
+    private var cancellables = Set<AnyCancellable>()
     
-    // MARK: - Properties
-    
-    var onSaveNickname: ((String) -> Void)?
-    private var viewModel: NicknameViewModelType = NicknameViewModel()
+    init(viewModel: NicknameViewModel) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     let nicknameLabel = UILabel().then {
         $0.text = "닉네임을 입력해주세요"
@@ -46,7 +53,6 @@ class NicknameViewController: UIViewController, UITextFieldDelegate {
         super.viewDidLoad()
         
         view.backgroundColor = .white
-        nicknameTextField.delegate = self
         
         addSubViews()
         setConstraints()
@@ -54,26 +60,31 @@ class NicknameViewController: UIViewController, UITextFieldDelegate {
         setupActions()
     }
     
-    // MARK: - Bind ViewModel
     private func bindViewModel() {
-        viewModel.nickname.bind { [weak self] nickname in
-            self?.nicknameTextField.text = nickname
-        }
+        viewModel.$nickname
+            .receive(on: RunLoop.main)
+            .assign(to: \.text, on: nicknameTextField)
+            .store(in: &cancellables)
         
-        viewModel.isValid.bind { [weak self] isValid in
-            guard let self = self else { return }
-            self.saveBtn.isEnabled = isValid
-            self.saveBtn.backgroundColor = isValid ? (UIColor(named: "red") ?? UIColor.red) : (UIColor(named: "gray84") ?? UIColor.lightGray)
-        }
-        
-        viewModel.errorMessage.bind { errorMessage in
-            if let errorMessage = errorMessage {
-                print("Error: \(errorMessage)")
+        viewModel.$isValid
+            .receive(on: RunLoop.main)
+            .sink { [weak self] isValid in
+                guard let self = self else { return }
+                self.saveBtn.isEnabled = isValid
+                self.saveBtn.backgroundColor = isValid ? (UIColor(named: "red") ?? UIColor.red) : (UIColor(named: "gray84") ?? UIColor.lightGray)
             }
-        }
+            .store(in: &cancellables)
+        
+        viewModel.$errorMessage
+            .receive(on: RunLoop.main)
+            .sink { errorMessage in
+                if let errorMessage = errorMessage {
+                    print("Error: \(errorMessage)")
+                }
+            }
+            .store(in: &cancellables)
     }
     
-    // MARK: - AddSubViews
     func addSubViews() {
         let views = [
             nicknameLabel,
@@ -85,7 +96,6 @@ class NicknameViewController: UIViewController, UITextFieldDelegate {
         }
     }
     
-    // MARK: - Layouts
     func setConstraints() {
         nicknameLabel.snp.makeConstraints {
             $0.top.equalTo(view.safeAreaLayoutGuide).offset(50)
@@ -108,33 +118,27 @@ class NicknameViewController: UIViewController, UITextFieldDelegate {
         }
     }
     
-    // MARK: - Setup Actions
     func setupActions() {
         saveBtn.addTarget(self, action: #selector(saveNickname), for: .touchUpInside)
-        nicknameTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
-    }
-    
-    // MARK: - Text Field Delegate
-    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-        let currentText = textField.text ?? ""
-        let prospectiveText = (currentText as NSString).replacingCharacters(in: range, with: string)
-        if string.isEmpty { return true }
-        return prospectiveText.count <= 10
-    }
-    
-    @objc func textFieldDidChange(_ textField: UITextField) {
-        if let text = textField.text {
-            viewModel.updateNickname(text)
-        }
+        
+        nicknameTextField.textPublisher
+            .compactMap { $0 }
+            .sink { [weak self] text in
+                self?.viewModel.updateNickname(text)
+            }
+            .store(in: &cancellables)
     }
     
     @objc func saveNickname() {
-        viewModel.saveNickname { [weak self] nickname in
-            guard let nickname = nickname else {
-                return
-            }
-            self?.onSaveNickname?(nickname)
-        }
+        viewModel.saveNickname()
     }
 }
 
+extension UITextField {
+    var textPublisher: AnyPublisher<String?, Never> {
+        NotificationCenter.default.publisher(for: UITextField.textDidChangeNotification, object: self)
+            .map { $0.object as? UITextField }
+            .map { $0?.text }
+            .eraseToAnyPublisher()
+    }
+}
