@@ -3,8 +3,10 @@
 //  combineStudy
 //
 //  Created by 이지훈 on 5/3/24.
-//
+//\
+
 import UIKit
+
 import Combine
 import SnapKit
 
@@ -16,47 +18,62 @@ class LoginViewController: UIViewController {
     @Published var nickname: String? // ViewController에서 nickname 변화를 구독할 수 있도록 @Published 속성 사용
 
     // MARK: - Properties
-    let loginLabel = UILabel().then {
-        $0.text = "TVING ID 로그인"
-        $0.textColor = UIColor(named: "gray84")
-        $0.font = UIFont(name: "Pretendard-Medium", size: 24)
-    }
+    let loginLabel: UILabel = {
+        let label = UILabel()
+        label.text = "TVING ID 로그인"
+        label.textColor = UIColor(named: "gray84") ?? .gray
+        label.font = UIFont(name: "Pretendard-Medium", size: 24)
+        return label
+    }()
 
-    let idTextFieldView = UITextField().then {
-        $0.backgroundColor = UIColor(named: "gray4")
-        $0.layer.cornerRadius = 3
-        $0.attributedPlaceholder = NSAttributedString(string: "아이디", attributes: [NSAttributedString.Key.foregroundColor: UIColor(named: "gray2")])
-    }
+    let idTextFieldView: UITextField = {
+        let textField = UITextField()
+        textField.backgroundColor = UIColor(named: "gray4") ?? .lightGray
+        textField.layer.cornerRadius = 3
+        textField.attributedPlaceholder = NSAttributedString(string: "아이디", attributes: [NSAttributedString.Key.foregroundColor: UIColor(named: "gray2") ?? .darkGray])
+        return textField
+    }()
 
-    let nicknameTextField = UITextField().then {
-        $0.backgroundColor = UIColor(named: "gray4")
-        $0.layer.cornerRadius = 3
-        $0.attributedPlaceholder = NSAttributedString(string: "닉네임", attributes: [NSAttributedString.Key.foregroundColor: UIColor(named: "gray2")])
-    }
+    let nicknameTextField: UITextField = {
+        let textField = UITextField()
+        textField.backgroundColor = UIColor(named: "gray4") ?? .lightGray
+        textField.layer.cornerRadius = 3
+        textField.attributedPlaceholder = NSAttributedString(string: "닉네임", attributes: [NSAttributedString.Key.foregroundColor: UIColor(named: "gray2") ?? .darkGray])
+        return textField
+    }()
 
-    let mirroredNicknameLabel = UILabel().then {
-        $0.textColor = .white
-        $0.font = UIFont(name: "Pretendard-SemiBold", size: 24)
-    }
+    let mirroredNicknameLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .white
+        label.font = UIFont(name: "Pretendard-SemiBold", size: 24)
+        label.text = "" // 초기값 설정
+        return label
+    }()
 
-    let saveButton = UIButton().then {
-        $0.backgroundColor = UIColor.clear
-        $0.layer.borderColor = UIColor(named: "gray4")?.cgColor
-        $0.layer.borderWidth = 1
-        $0.setTitle("저장하기", for: .normal)
-        $0.layer.cornerRadius = 3
-        $0.isEnabled = false
-    }
+    let saveButton: UIButton = {
+        let button = UIButton()
+        button.backgroundColor = UIColor.clear
+        button.layer.borderColor = UIColor(named: "gray4")?.cgColor ?? UIColor.lightGray.cgColor
+        button.layer.borderWidth = 1
+        button.setTitle("저장하기", for: .normal)
+        button.layer.cornerRadius = 3
+        button.isEnabled = false
+        return button
+    }()
 
-    let addNicknameButton = UIButton().then {
-        $0.setTitle("닉네임 추가하기", for: .normal)
-        $0.setTitleColor(UIColor.blue, for: .normal)
-    }
+    let addNicknameButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("닉네임 추가하기", for: .normal)
+        button.setTitleColor(UIColor.blue, for: .normal)
+        return button
+    }()
 
-    let nicknameLabel = UILabel().then {
-        $0.textColor = .white
-        $0.font = UIFont(name: "Pretendard-SemiBold", size: 14)
-    }
+    let nicknameLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .white
+        label.font = UIFont(name: "Pretendard-SemiBold", size: 14)
+        return label
+    }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -206,4 +223,3 @@ class LoginViewController: UIViewController {
         }
     }
 }
-
