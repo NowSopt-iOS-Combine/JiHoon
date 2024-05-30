@@ -74,11 +74,11 @@ class LoginViewController: UIViewController {
         addNicknameButton.addTarget(self, action: #selector(presentModalView), for: .touchUpInside) // 닉네임 추가 버튼 클릭 시 액션 설정
         saveButton.addTarget(self, action: #selector(handleSave), for: .touchUpInside) // 저장 버튼 클릭 시 액션 설정
 
-        // 닉네임 텍스트 필드의 텍스트 변화를 debounce하여 미러 레이블에 반영
         nicknameTextField.textPublisher
             .debounce(for: .milliseconds(500), scheduler: RunLoop.main) // 500밀리초 동안 입력이 없을 때 반영
             .compactMap { $0 }
             .sink { [weak self] text in
+                print("Debounced Text: \(text)") // 로그 추가
                 self?.mirroredNicknameLabel.text = text // 미러 레이블에 텍스트 반영
             }
             .store(in: &cancellables) // 구독을 cancellables에 저장
@@ -156,11 +156,11 @@ class LoginViewController: UIViewController {
             sheet.detents = [.medium()]
             sheet.prefersGrabberVisible = true
         }
-        self.present(modalViewController, animated: true, completion: nil) // NicknameViewController 표시
+        self.present(modalViewController, animated: true, completion: nil)
     }
 
     private func addSubviews(_ views: UIView...) {
-        views.forEach { view.addSubview($0) } // 서브뷰 추가
+        views.forEach { view.addSubview($0) }
     }
 
     private func setConstraints() {
@@ -177,7 +177,7 @@ class LoginViewController: UIViewController {
         }
 
         mirroredNicknameLabel.snp.makeConstraints { make in
-            make.bottom.equalTo(idTextFieldView.snp.top).offset(-20) // idTextFieldView의 위쪽에 20만큼 떨어진 위치에 배치
+            make.bottom.equalTo(idTextFieldView.snp.top).offset(-20)
             make.centerX.equalTo(view)
         }
 
