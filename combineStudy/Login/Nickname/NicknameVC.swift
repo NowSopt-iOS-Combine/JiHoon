@@ -4,6 +4,7 @@
 //
 //  Created by 이지훈 on 4/12/24.
 //
+
 import UIKit
 import SnapKit
 import Then
@@ -12,8 +13,8 @@ import Combine
 class NicknameViewController: UIViewController {
 
     private var viewModel: NicknameViewModel
-    private var cancellables = Set<AnyCancellable>()
-    
+    private var cancellables = Set<AnyCancellable>() // 구독을 저장할 Set -> 구독 취소되면 자동으로 메모리에서 해제
+
     init(viewModel: NicknameViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -59,32 +60,8 @@ class NicknameViewController: UIViewController {
         bindViewModel()
         setupActions()
     }
-    
-    private func bindViewModel() {
-        viewModel.$nickname
-            .receive(on: RunLoop.main)
-            .assign(to: \.text, on: nicknameTextField)
-            .store(in: &cancellables)
-        
-        viewModel.$isValid
-            .receive(on: RunLoop.main)
-            .sink { [weak self] isValid in
-                guard let self = self else { return }
-                self.saveBtn.isEnabled = isValid
-                self.saveBtn.backgroundColor = isValid ? (UIColor(named: "red") ?? UIColor.red) : (UIColor(named: "gray84") ?? UIColor.lightGray)
-            }
-            .store(in: &cancellables)
-        
-        viewModel.$errorMessage
-            .receive(on: RunLoop.main)
-            .sink { errorMessage in
-                if let errorMessage = errorMessage {
-                    print("Error: \(errorMessage)")
-                }
-            }
-            .store(in: &cancellables)
-    }
-    
+
+    //MARK: - Layout
     func addSubViews() {
         let views = [
             nicknameLabel,
@@ -92,7 +69,7 @@ class NicknameViewController: UIViewController {
             saveBtn
         ]
         views.forEach {
-            view.addSubview($0)
+            view.addSubview($0) // 서브뷰 추가.
         }
     }
     
@@ -118,27 +95,33 @@ class NicknameViewController: UIViewController {
         }
     }
     
+    private func bindViewModel() {
+        viewModel.$nickname
+            .receive(on: RunLoop.main) // 메인 스레드에서 구독.
+            .assign(to: \.text, on: nicknameTextField) // nicknameTextField의 text 속성에 값 할당.
+            .store(in: &cancellables) // 구독을 cancellables에 저장 -> cancellables가 메모리에서 해제될 때까지 구독이 유지되도록 "잡아두는" 역할
+    }
+    
     func setupActions() {
         saveBtn.addTarget(self, action: #selector(saveNickname), for: .touchUpInside)
-        
         nicknameTextField.textPublisher
             .compactMap { $0 }
             .sink { [weak self] text in
-                self?.viewModel.updateNickname(text)
+                self?.viewModel.updateNickname(text) // ViewModel의 updateNickname 호출.
             }
-            .store(in: &cancellables)
+            .store(in: &cancellables) // 구독을 cancellables에 저장.
     }
     
     @objc func saveNickname() {
-        viewModel.saveNickname()
+        viewModel.saveNickname() // ViewModel의 saveNickname 호출.
     }
 }
 
 extension UITextField {
     var textPublisher: AnyPublisher<String?, Never> {
-        NotificationCenter.default.publisher(for: UITextField.textDidChangeNotification, object: self)
-            .map { $0.object as? UITextField }
-            .map { $0?.text }
-            .eraseToAnyPublisher()
+        NotificationCenter.default.publisher(for: UITextField.textDidChangeNotification, object: self) // 텍스트 필드의 텍스트 변경 이벤트 발행.
+            .map { $0.object as? UITextField } // UITextField로 변환.
+            .map { $0?.text } // 텍스트 필드의 텍스트를 추출.
+            .eraseToAnyPublisher() // Publisher의 타입을 AnyPublisher로 변환.
     }
 }
