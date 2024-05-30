@@ -16,28 +16,42 @@ final class NicknameViewModel {
     
     private let validNicknameRegex = "^[가-힣]{1,10}$"
     private var nicknameSubject = PassthroughSubject<String?, Never>() // 닉네임을 발행할 Subject.
+    private var cancellables = Set<AnyCancellable>() // 구독을 저장할 Set
     
     var nicknamePublisher: AnyPublisher<String?, Never> {
         return nicknameSubject.eraseToAnyPublisher() // nicknameSubject를 AnyPublisher로 변환하여 외부에 제공.
     }
 
+    init() {
+        setupBindings()
+    }
+
+    private func setupBindings() {
+        $nickname
+            .debounce(for: .milliseconds(30), scheduler: RunLoop.main) // 디바운스 적용
+            .sink { [weak self] nickname in
+                self?.validateNickname(nickname ?? "")
+            }
+            .store(in: &cancellables)
+    }
+
     func updateNickname(_ nickname: String) {
-        self.nickname = nickname // 닉네임 업데이트.
+        self.nickname = nickname
     }
     
     func saveNickname() {
         if let nickname = nickname, validateNickname(nickname) {
-            errorMessage = nil // 에러 메시지 초기화.
-            nicknameSubject.send(nickname) // 닉네임 발행.
+            errorMessage = nil
+            nicknameSubject.send(nickname)
         } else {
-            errorMessage = "닉네임을 한글 1~10자로 입력해주세요." // 에러 메시지 설정.
-            nicknameSubject.send(nil) // nil 발행.
+            errorMessage = "한글 1~10자로 입력해주세요."
+            nicknameSubject.send(nil)
         }
     }
     
     private func validateNickname(_ nickname: String) -> Bool {
-        let isValid = nickname.range(of: validNicknameRegex, options: .regularExpression) != nil // 닉네임 유효성 검사.
-        self.isValid = isValid // 유효성 상태 업데이트.
-        return isValid // 유효성 결과 반환.
+        let isValid = nickname.range(of: validNicknameRegex, options: .regularExpression) != nil
+        self.isValid = isValid
+        return isValid
     }
 }

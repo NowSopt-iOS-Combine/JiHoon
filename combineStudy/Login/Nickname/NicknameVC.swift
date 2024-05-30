@@ -100,6 +100,22 @@ class NicknameViewController: UIViewController {
             .receive(on: RunLoop.main) // 메인 스레드에서 구독.
             .assign(to: \.text, on: nicknameTextField) // nicknameTextField의 text 속성에 값 할당.
             .store(in: &cancellables) // 구독을 cancellables에 저장 -> cancellables가 메모리에서 해제될 때까지 구독이 유지되도록 "잡아두는" 역할
+        
+        viewModel.$isValid
+            .receive(on: RunLoop.main) // 메인 스레드에서 구독.
+            .sink { [weak self] isValid in
+                self?.saveBtn.isEnabled = isValid // 저장 버튼 활성화 상태 업데이트.
+            }
+            .store(in: &cancellables)
+        
+        viewModel.$errorMessage
+            .receive(on: RunLoop.main) // 메인 스레드에서 구독.
+            .sink { errorMessage in
+                if let errorMessage = errorMessage {
+                    print("Error: \(errorMessage)") // 에러 메시지 출력.
+                }
+            }
+            .store(in: &cancellables)
     }
     
     func setupActions() {
@@ -114,6 +130,9 @@ class NicknameViewController: UIViewController {
     
     @objc func saveNickname() {
         viewModel.saveNickname() // ViewModel의 saveNickname 호출.
+        if viewModel.isValid {
+            dismiss(animated: true) // 닉네임이 유효한 경우 모달 닫기.
+        }
     }
 }
 
