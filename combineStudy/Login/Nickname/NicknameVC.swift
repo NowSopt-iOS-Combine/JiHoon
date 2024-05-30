@@ -4,7 +4,6 @@
 //
 //  Created by 이지훈 on 4/12/24.
 //
-
 import UIKit
 import SnapKit
 import Then
@@ -123,6 +122,7 @@ class NicknameViewController: UIViewController {
         nicknameTextField.textPublisher
             .compactMap { $0 }
             .sink { [weak self] text in
+                print("Text Changed: \(text)") // 텍스트 변경 로그 추가
                 self?.viewModel.updateNickname(text) // ViewModel의 updateNickname 호출.
             }
             .store(in: &cancellables) // 구독을 cancellables에 저장.

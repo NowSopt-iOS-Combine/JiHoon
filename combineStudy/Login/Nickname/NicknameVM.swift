@@ -28,8 +28,9 @@ final class NicknameViewModel {
 
     private func setupBindings() {
         $nickname
-            .debounce(for: .milliseconds(30), scheduler: RunLoop.main) // 디바운스 적용
+            .debounce(for: .milliseconds(500), scheduler: RunLoop.main) // 디바운스 적용
             .sink { [weak self] nickname in
+                print("Debounced Nickname: \(String(describing: nickname))") // 디바운스된 닉네임 출력
                 self?.validateNickname(nickname ?? "")
             }
             .store(in: &cancellables)
