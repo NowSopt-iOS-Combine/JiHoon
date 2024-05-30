@@ -3,356 +3,223 @@
 //  combineStudy
 //
 //  Created by 이지훈 on 5/3/24.
-//
+//\
 
 import UIKit
 
-import SnapKit
 import Combine
-import CombineCocoa
+import SnapKit
 
+class LoginViewController: UIViewController {
 
+    var viewModel = LoginViewModel() // ViewModel 인스턴스 생성
+    var cancellables = Set<AnyCancellable>() // 구독을 저장할 Set
 
-class LoginViewController: UIViewController, UITextFieldDelegate, WelcomeViewControllerDelegate {
+    @Published var nickname: String? // ViewController에서 nickname 변화를 구독할 수 있도록 @Published 속성 사용
 
-    var viewModel = LoginViewModel()
-    var cancellables = Set<AnyCancellable>()
-    
-    
-    func didLoginWithId(id: String) {
-        print(1)
-    }
-    
-    //MARK: - Properties
-    var nickname: String?  // 클로저로 받을 닉네임
-    
-    let loginLabel = UILabel().then {
-        $0.text = "TVING ID 로그인"
-        $0.textColor = UIColor(named: "gray84")
-        $0.font = UIFont(name: "Pretendard-Medium", size: 24)
-    }
-    
-    let idTextFieldView = UITextField().then {
-        $0.backgroundColor = UIColor(named: "gray4")
-        $0.layer.cornerRadius = 3
-        $0.attributedPlaceholder = NSAttributedString(string: "아이디", attributes: [NSAttributedString.Key.foregroundColor: UIColor(named: "gray2")])
-    }
-    
-    let passwordTextFieldView = UITextField().then {
-        $0.backgroundColor = UIColor(named: "gray4")
-        $0.layer.cornerRadius = 3
-        $0.attributedPlaceholder = NSAttributedString(string: "비밀번호", attributes: [NSAttributedString.Key.foregroundColor: UIColor(named: "gray2")])
-        $0.isSecureTextEntry = true
-    }
-    
-    let loginButton = UIButton().then {
-        $0.backgroundColor = UIColor.clear
-        $0.layer.borderColor = UIColor(named: "gray4")?.cgColor
-        $0.layer.borderWidth = 1
-        $0.setTitle("로그인하기", for: .normal)
-        $0.layer.cornerRadius = 3
-        $0.isEnabled = false
-    }
-    
-    let findId = UILabel().then {
-        $0.text = "아이디 찾기"
-        $0.textColor = UIColor(named: "gray2")
-        $0.font = UIFont(name: "Pretendard-SemiBold", size: 14)
-    }
-    
-    let findPw = UILabel().then {
-        $0.text = "비밀번호 찾기"
-        $0.textColor = UIColor(named: "gray2")
-    }
-    
-    let noAccount = UILabel().then {
-        $0.text = "아직계정이 없으신가요?"
-        $0.textColor = UIColor(named: "gray3")
-    }
-    
-    let makeAccount = UIButton().then {
-        let title = "닉네임 만들러 가기"
-        let attributes: [NSAttributedString.Key: Any] = [
-            .foregroundColor: UIColor(named: "gray2")!,
-            .underlineStyle: NSUnderlineStyle.single.rawValue
-        ]
-        
-        let attributedTitle = NSMutableAttributedString(string: title, attributes: attributes)
-        $0.setAttributedTitle(attributedTitle, for: .normal)
-    }
-    
-    let spaceView = UIView().then {
-        $0.backgroundColor = UIColor(named: "gray2")
-    }
-    
-    let eyeButton = UIButton(type: .custom)
-    let xCircleButton = UIButton(type: .custom)
-    
-    
-    //MARK: - ViewDidLoad
+    // MARK: - Properties
+    let loginLabel: UILabel = {
+        let label = UILabel()
+        label.text = "TVING ID 로그인"
+        label.textColor = UIColor(named: "gray84") ?? .gray
+        label.font = UIFont(name: "Pretendard-Medium", size: 24)
+        return label
+    }()
+
+    let idTextFieldView: UITextField = {
+        let textField = UITextField()
+        textField.backgroundColor = UIColor(named: "gray4") ?? .lightGray
+        textField.layer.cornerRadius = 3
+        textField.attributedPlaceholder = NSAttributedString(string: "아이디", attributes: [NSAttributedString.Key.foregroundColor: UIColor(named: "gray2") ?? .darkGray])
+        return textField
+    }()
+
+    let nicknameTextField: UITextField = {
+        let textField = UITextField()
+        textField.backgroundColor = UIColor(named: "gray4") ?? .lightGray
+        textField.layer.cornerRadius = 3
+        textField.attributedPlaceholder = NSAttributedString(string: "닉네임", attributes: [NSAttributedString.Key.foregroundColor: UIColor(named: "gray2") ?? .darkGray])
+        return textField
+    }()
+
+    let mirroredNicknameLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .white
+        label.font = UIFont(name: "Pretendard-SemiBold", size: 24)
+        label.text = "" // 초기값 설정
+        return label
+    }()
+
+    let saveButton: UIButton = {
+        let button = UIButton()
+        button.backgroundColor = UIColor.clear
+        button.layer.borderColor = UIColor(named: "gray4")?.cgColor ?? UIColor.lightGray.cgColor
+        button.layer.borderWidth = 1
+        button.setTitle("저장하기", for: .normal)
+        button.layer.cornerRadius = 3
+        button.isEnabled = false
+        return button
+    }()
+
+    let addNicknameButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("닉네임 추가하기", for: .normal)
+        button.setTitleColor(UIColor.blue, for: .normal)
+        return button
+    }()
+
+    let nicknameLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .white
+        label.font = UIFont(name: "Pretendard-SemiBold", size: 14)
+        return label
+    }()
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        configureUI()
-        setupBindings()
-        layoutUI()
-        bind()
+        configureUI() // UI 설정
+        setupBindings() // UI 요소와 액션 바인딩
+        layoutUI() // UI 레이아웃 설정
+        bind() // ViewModel과 바인딩
     }
 
     private func configureUI() {
         view.backgroundColor = .black
-        idTextFieldView.delegate = self
-        passwordTextFieldView.delegate = self
-
-        eyeButton.setImage(UIImage(named: "eyeIcon"), for: .normal)
-        xCircleButton.setImage(UIImage(named: "xCircle"), for: .normal)
     }
 
     private func setupBindings() {
-        idTextFieldView.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
-        passwordTextFieldView.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
-        eyeButton.addTarget(self, action: #selector(togglePasswordView), for: .touchUpInside)
-        xCircleButton.addTarget(self, action: #selector(handleXCircleButtonTap), for: .touchUpInside)
-        loginButton.addTarget(self, action: #selector(handleLogin), for: .touchUpInside)
-        makeAccount.addTarget(self, action: #selector(presentModalView), for: .touchUpInside)
+        addNicknameButton.addTarget(self, action: #selector(presentModalView), for: .touchUpInside) // 닉네임 추가 버튼 클릭 시 액션 설정
+        saveButton.addTarget(self, action: #selector(handleSave), for: .touchUpInside) // 저장 버튼 클릭 시 액션 설정
+
+        nicknameTextField.textPublisher
+            .debounce(for: .milliseconds(500), scheduler: RunLoop.main) // 500밀리초 동안 입력이 없을 때 반영
+            .compactMap { $0 }
+            .sink { [weak self] text in
+                print("Debounced Text: \(text)") // 로그 추가
+                self?.mirroredNicknameLabel.text = text // 미러 레이블에 텍스트 반영
+            }
+            .store(in: &cancellables) // 구독을 cancellables에 저장
     }
 
     private func layoutUI() {
-        addSubViews()
+        addSubviews(
+            loginLabel,
+            idTextFieldView,
+            nicknameTextField,
+            mirroredNicknameLabel,
+            saveButton,
+            addNicknameButton,
+            nicknameLabel
+        )
         setConstraints()
-
-        eyeButton.snp.makeConstraints { make in
-            make.trailing.equalTo(passwordTextFieldView.snp.trailing).offset(-20)
-            make.centerY.equalTo(passwordTextFieldView)
-            make.width.height.equalTo(24)
-        }
-        xCircleButton.snp.makeConstraints { make in
-            make.trailing.equalTo(eyeButton.snp.leading).offset(-20)
-            make.centerY.equalTo(passwordTextFieldView)
-            make.width.height.equalTo(24)
-        }
     }
 
-    //MARK: - DataBind
-    
     private func bind() {
         let input = LoginViewModel.Input(
-            username: idTextFieldView.textPublisher
-                .compactMap { $0 ?? "" } // 옵셔널을 처리하여 비어있지 않은 문자열을 보장
-                .eraseToAnyPublisher(),
-            password: passwordTextFieldView.textPublisher
-                .compactMap { $0 ?? "" } // 동일하게 옵셔널 처리
+            nickname: nicknameTextField.textPublisher
+                .compactMap { $0 ?? "" } // 텍스트 필드의 텍스트 변화를 구독
                 .eraseToAnyPublisher()
         )
 
-        let output = viewModel.transform(input: input, cancelBag: &cancellables)
+        let output = viewModel.transform(input: input) // ViewModel의 transform 메소드 호출
 
         output.isButtonEnabled
-            .receive(on: RunLoop.main)
-            .assign(to: \.isEnabled, on: loginButton)
+            .receive(on: RunLoop.main) // 메인 스레드에서 구독
+            .assign(to: \.isEnabled, on: saveButton) // 저장 버튼의 활성화 상태를 업데이트
             .store(in: &cancellables)
 
         output.buttonBackgroundColor
-            .receive(on: RunLoop.main)
+            .receive(on: RunLoop.main) // 메인 스레드에서 구독
             .sink { [weak self] color in
-                self?.loginButton.backgroundColor = color
+                self?.saveButton.backgroundColor = color // 저장 버튼의 배경색을 업데이트
+            }
+            .store(in: &cancellables)
+
+        $nickname
+            .receive(on: RunLoop.main) // 메인 스레드에서 구독
+            .sink { [weak self] nickname in
+                self?.nicknameLabel.text = nickname // 닉네임 레이블의 텍스트를 업데이트
             }
             .store(in: &cancellables)
     }
 
-    @objc func handleLogin() {
-        viewModel.username = idTextFieldView.text ?? ""
-        viewModel.password = passwordTextFieldView.text ?? ""
-        
-        print("Current username: \(viewModel.username)")
-        print("Current password: \(viewModel.password)")
-        
-        viewModel.login()
-        
-        // 로그인 성공 후 WelcomeViewController를 모달로 표시
+    @objc func handleSave() {
+        viewModel.nickname = nicknameTextField.text ?? "" // ViewModel의 nickname 업데이트
+
+        print("Current nickname: \(viewModel.nickname)")
+
+        viewModel.saveNickname() // ViewModel의 saveNickname 호출
+
         let welcomeVC = WelcomeViewController()
-        welcomeVC.id = viewModel.username  // id로 username을 전달
+        welcomeVC.id = viewModel.nickname // WelcomeViewController에 닉네임 전달
         welcomeVC.modalPresentationStyle = .fullScreen
-        self.present(welcomeVC, animated: true, completion: nil)
+        self.present(welcomeVC, animated: true, completion: nil) // WelcomeViewController 표시
     }
 
-    
+    @objc func presentModalView() {
+        let nicknameViewModel = NicknameViewModel()
+        let modalViewController = NicknameViewController(viewModel: nicknameViewModel)
 
-       @objc func handleXCircleButtonTap() {
-           viewModel.clearFields()
-       }
-    
-    //MARK: - AddSubview
-    func addSubViews() {
-        let views = [
-            loginLabel,
-            idTextFieldView,
-            passwordTextFieldView,
-            loginButton,
-            findId,
-            findPw,
-            noAccount,
-            makeAccount,
-            spaceView,
-            eyeButton,
-            xCircleButton
-        ]
-        views.forEach {
-            view.addSubview($0)
+        nicknameViewModel.nicknamePublisher
+            .receive(on: RunLoop.main) // 메인 스레드에서 구독
+            .sink { [weak self] nickname in
+                self?.nickname = nickname // 닉네임 업데이트
+                self?.nicknameLabel.text = nickname // 닉네임을 레이블에 반영
+            }
+            .store(in: &cancellables)
+
+        modalViewController.modalPresentationStyle = .formSheet
+        if let sheet = modalViewController.sheetPresentationController {
+            sheet.detents = [.medium()]
+            sheet.prefersGrabberVisible = true
         }
+        self.present(modalViewController, animated: true, completion: nil)
     }
-    
-    
-    //MARK: - layout
-    func setConstraints() {
+
+    private func addSubviews(_ views: UIView...) {
+        views.forEach { view.addSubview($0) }
+    }
+
+    private func setConstraints() {
         loginLabel.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide).offset(90)
             make.centerX.equalTo(view)
         }
-        
+
         idTextFieldView.snp.makeConstraints { make in
             make.top.equalTo(loginLabel.snp.bottom).offset(20)
             make.centerX.equalTo(view)
             make.width.equalTo(335)
             make.height.equalTo(52)
-            
         }
-        
-        passwordTextFieldView.snp.makeConstraints { make in
+
+        mirroredNicknameLabel.snp.makeConstraints { make in
+            make.bottom.equalTo(idTextFieldView.snp.top).offset(-20)
+            make.centerX.equalTo(view)
+        }
+
+        nicknameTextField.snp.makeConstraints { make in
             make.top.equalTo(idTextFieldView.snp.bottom).offset(20)
-            
             make.centerX.equalTo(view)
             make.width.equalTo(335)
             make.height.equalTo(52)
         }
-        
-        loginButton.snp.makeConstraints { make in
-            make.top.equalTo(passwordTextFieldView.snp.bottom).offset(21)
-            
+
+        saveButton.snp.makeConstraints { make in
+            make.top.equalTo(nicknameTextField.snp.bottom).offset(21)
             make.centerX.equalTo(view)
             make.width.equalTo(335)
             make.height.equalTo(52)
         }
-        
-        findId.snp.makeConstraints { make in
-            make.top.equalTo(loginButton.snp.bottom).offset(31)
-            make.leading.equalTo(view).offset(85)
-        }
-        
-        spaceView.snp.makeConstraints { make in
+
+        addNicknameButton.snp.makeConstraints { make in
+            make.top.equalTo(saveButton.snp.bottom).offset(20)
             make.centerX.equalTo(view)
-            make.top.equalTo(loginButton.snp.bottom).offset(31)
-            make.width.equalTo(2)
-            make.height.equalTo(14)
         }
-        
-        findPw.snp.makeConstraints { make in
-            make.top.equalTo(loginButton.snp.bottom).offset(31)
-            make.trailing.equalTo(view).offset(-86)
-        }
-        
-        noAccount.snp.makeConstraints { make in
-            make.top.equalTo(findId.snp.bottom).offset(12)
-            make.leading.equalTo(view.snp.leading).offset(51)
-        }
-        
-        makeAccount.snp.makeConstraints { make in
-            make.top.equalTo(findPw.snp.bottom).offset(12)
-            make.trailing.equalTo(view.snp.trailing).offset(-43)
-        }
-        
-        //PlaceHolder 왼쪽공간 띄우기
-        let spacerView = UIView(frame:CGRect(x:0, y:0, width:22, height:10))
-        idTextFieldView.leftViewMode = .always
-        idTextFieldView.leftView = spacerView
-        
-        let spacerViewForPassword = UIView(frame:CGRect(x:0, y:0, width:22, height:10))
-        passwordTextFieldView.leftViewMode = .always
-        passwordTextFieldView.leftView = spacerViewForPassword
-        
-        findId.snp.makeConstraints { make in
-            make.top.equalTo(loginButton.snp.bottom).offset(31)
-            
-        }
-        
-        //오른쪽 버튼 공간 띄우기
-        eyeButton.setImage(UIImage(named: "eyeIcon"), for: .normal)
-        eyeButton.addTarget(self, action: #selector(togglePasswordView), for: .touchUpInside)
-        eyeButton.snp.makeConstraints { make in
-            make.trailing.equalTo(passwordTextFieldView.snp.trailing).offset(-20)
-            make.centerY.equalTo(passwordTextFieldView)
-            make.width.height.equalTo(24)
-        }
-        
-        xCircleButton.setImage(UIImage(named: "xcircle"), for: .normal)
-        xCircleButton.snp.makeConstraints { make in
-            make.trailing.equalTo(eyeButton.snp.leading).offset(-20)
-            make.centerY.equalTo(passwordTextFieldView)
-            make.width.height.equalTo(24)
-        }
-        
-    }
-    
-    // TF 포커스 호출
-    func textFieldDidBeginEditing(_ textField: UITextField) {
-        // 테두리 색상 변경
-        textField.layer.borderColor = CGColor(gray: 1, alpha: 1)
-        textField.layer.borderWidth = 1.0
-    }
-    
-    // TF 포커스 해제
-    func textFieldDidEndEditing(_ textField: UITextField) {
-        textField.layer.borderColor = UIColor.clear.cgColor
-        textField.layer.borderWidth = 0.0
-    }
-    
-    // 텍스트가 변경될 때 호출되는 메서드
-    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-        textField.clearButtonMode = .whileEditing
-        return true
-    }
-    
-    //비밀번호 보안처리
-    @objc func togglePasswordView() {
-        passwordTextFieldView.isSecureTextEntry.toggle()
-    }
-    
-    //텍스트 필드 채워졌는지 확인
-    @objc func textFieldDidChange(_ textField: UITextField) {
-        let isBothFilled = !(idTextFieldView.text?.isEmpty ?? true) && !(passwordTextFieldView.text?.isEmpty ?? true)
-        loginButton.isEnabled = isBothFilled
-        loginButton.backgroundColor = isBothFilled ? UIColor(named: "red"): .clear
-    }
-    
-    
-    
-    //닉네임 만들기
-    @objc func presentModalView() {
-        //            let modalViewController = NicknameViewController()
-        //        
-        //        if let nicknameVC = modalViewController.presentationController as? UISheetPresentationController {
-        //            nicknameVC.detents = [.medium()]
-        //            nicknameVC.prefersGrabberVisible = true
-        //
-        //        }
-        //            modalViewController.onSaveNickname = { [weak self] nickname in
-        //                self?.nickname = nickname  // 닉네임 저장
-        //                print("닉네임 저장됨: \(nickname)")
-        //            }
-        //            present(modalViewController, animated: true, completion: nil)
-        //        }
-    }
-    
-}
 
-extension UITextField {
-    var textPublisher: AnyPublisher<String?, Never> {
-        NotificationCenter.default.publisher(for: UITextField.textDidChangeNotification, object: self)
-            .map { $0.object as? UITextField }
-            .map { $0?.text }
-            .eraseToAnyPublisher()
+        nicknameLabel.snp.makeConstraints { make in
+            make.top.equalTo(addNicknameButton.snp.bottom).offset(20)
+            make.centerX.equalTo(view)
+        }
     }
 }
-
-//#Preview{
-//    LoginViewController()
-//}

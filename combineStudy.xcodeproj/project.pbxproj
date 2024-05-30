@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		782BC2512C05CFEF00556BE5 /* NicknameVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 782BC24F2C05CFEF00556BE5 /* NicknameVC.swift */; };
+		782BC2522C05CFEF00556BE5 /* NicknameVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 782BC2502C05CFEF00556BE5 /* NicknameVM.swift */; };
+		782BC2542C05D00200556BE5 /* Observable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 782BC2532C05D00200556BE5 /* Observable.swift */; };
 		7852BD042BEB3B480037BA7E /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7852BD032BEB3B480037BA7E /* SnapKit */; };
 		7852BD072BEB3B560037BA7E /* Then in Frameworks */ = {isa = PBXBuildFile; productRef = 7852BD062BEB3B560037BA7E /* Then */; };
 		7852BD092BEB3B910037BA7E /* WelcomeVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7852BD082BEB3B910037BA7E /* WelcomeVC.swift */; };
@@ -21,6 +24,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		782BC24F2C05CFEF00556BE5 /* NicknameVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NicknameVC.swift; sourceTree = "<group>"; };
+		782BC2502C05CFEF00556BE5 /* NicknameVM.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NicknameVM.swift; sourceTree = "<group>"; };
+		782BC2532C05D00200556BE5 /* Observable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Observable.swift; sourceTree = "<group>"; };
 		7852BD082BEB3B910037BA7E /* WelcomeVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeVC.swift; sourceTree = "<group>"; };
 		7852BD302BEC8BA00037BA7E /* LoginVM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginVM.swift; sourceTree = "<group>"; };
 		78F327D52BE46261001EAC45 /* combineStudy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = combineStudy.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -47,9 +53,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		782BC24E2C05CFEF00556BE5 /* Nickname */ = {
+			isa = PBXGroup;
+			children = (
+				782BC24F2C05CFEF00556BE5 /* NicknameVC.swift */,
+				782BC2502C05CFEF00556BE5 /* NicknameVM.swift */,
+			);
+			path = Nickname;
+			sourceTree = "<group>";
+		};
 		7852BD2D2BEC8B5D0037BA7E /* Login */ = {
 			isa = PBXGroup;
 			children = (
+				782BC2532C05D00200556BE5 /* Observable.swift */,
+				782BC24E2C05CFEF00556BE5 /* Nickname */,
 				7852BD2F2BEC8B700037BA7E /* VM */,
 				7852BD2E2BEC8B6A0037BA7E /* VC */,
 			);
@@ -185,7 +202,10 @@
 			files = (
 				78F327DD2BE46261001EAC45 /* LoginVC.swift in Sources */,
 				7852BD092BEB3B910037BA7E /* WelcomeVC.swift in Sources */,
+				782BC2512C05CFEF00556BE5 /* NicknameVC.swift in Sources */,
 				7852BD312BEC8BA00037BA7E /* LoginVM.swift in Sources */,
+				782BC2542C05D00200556BE5 /* Observable.swift in Sources */,
+				782BC2522C05CFEF00556BE5 /* NicknameVM.swift in Sources */,
 				78F327D92BE46261001EAC45 /* AppDelegate.swift in Sources */,
 				78F327ED2BE48416001EAC45 /* MyViewModel.swift in Sources */,
 				78F327DB2BE46261001EAC45 /* SceneDelegate.swift in Sources */,
